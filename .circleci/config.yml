@@ -27,7 +27,7 @@ jobs:
       # Run tests (equivalent to script in Travis)
       - run:
           name: Run tests
-          command: docker run -e CI=true denzik10/docker-react npm run test
+          command: docker run -e CI=true denzik10/docker-react npm run test -- --coverage
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/guides/orchestrate/workflows/ & https://circleci.com/docs/reference/configuration-reference/#workflows
