@@ -17,8 +17,7 @@ jobs:
       - checkout
       
       # Setup Docker-in-Docker to enable Docker builds
-      - setup_remote_docker:
-          version: 20.10.14
+      - setup_remote_docker
       
       # Build the Docker image (equivalent to before_install in Travis)
       - run:
