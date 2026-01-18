@@ -64,20 +64,11 @@ jobs:
             # Configure AWS credentials for EB CLI
             # EB CLI uses the profile specified in .elasticbeanstalk/config.yml (eb-cli)
             mkdir -p ~/.aws
-            cat > ~/.aws/credentials << EOF
-            [default]
-            aws_access_key_id = ${AWS_ACCESS_KEY_ID}
-            aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
-            [eb-cli]
-            aws_access_key_id = ${AWS_ACCESS_KEY_ID}
-            aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
-            EOF
-            cat > ~/.aws/config << EOF
-            [default]
-            region = ${AWS_DEFAULT_REGION}
-            [profile eb-cli]
-            region = ${AWS_DEFAULT_REGION}
-            EOF
+            printf "[default]\naws_access_key_id = %s\naws_secret_access_key = %s\n[eb-cli]\naws_access_key_id = %s\naws_secret_access_key = %s\n" \
+              "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" \
+              "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" > ~/.aws/credentials
+            printf "[default]\nregion = %s\n[profile eb-cli]\nregion = %s\n" \
+              "$AWS_DEFAULT_REGION" "$AWS_DEFAULT_REGION" > ~/.aws/config
       - run:
           name: Initialize EB CLI (if needed)
           command: |
