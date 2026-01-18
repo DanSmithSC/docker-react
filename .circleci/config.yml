@@ -59,6 +59,24 @@ jobs:
             pip3 install awsebcli --upgrade --user
             export PATH=$HOME/.local/bin:$PATH
       - run:
+          name: Initialize EB CLI (if needed)
+          command: |
+            export PATH=$HOME/.local/bin:$PATH
+            # Check if .elasticbeanstalk/config.yml exists, if not initialize
+            if [ ! -f .elasticbeanstalk/config.yml ]; then
+              echo "EB not initialized. Initializing now..."
+              # Initialize EB non-interactively with Node.js platform
+              # Uses environment variables: AWS_DEFAULT_REGION and EB_APPLICATION_NAME (optional)
+              eb init \
+                --platform "Node.js 18 running on 64bit Amazon Linux 2" \
+                --region "${AWS_DEFAULT_REGION:-us-east-1}" \
+                ${EB_APPLICATION_NAME:+--application-name "$EB_APPLICATION_NAME"} \
+                --no-verify-ssl \
+                --no-interactive || echo "Warning: EB init failed. Make sure to run 'eb init' locally and commit .elasticbeanstalk directory."
+            else
+              echo "EB already initialized."
+            fi
+      - run:
           name: Deploy to AWS Elastic Beanstalk
           command: |
             export PATH=$HOME/.local/bin:$PATH
