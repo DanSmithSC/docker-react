@@ -59,6 +59,26 @@ jobs:
             pip3 install awsebcli --upgrade --user
             export PATH=$HOME/.local/bin:$PATH
       - run:
+          name: Configure AWS credentials
+          command: |
+            # Configure AWS credentials for EB CLI
+            # EB CLI uses the profile specified in .elasticbeanstalk/config.yml (eb-cli)
+            mkdir -p ~/.aws
+            cat > ~/.aws/credentials << EOF
+            [default]
+            aws_access_key_id = ${AWS_ACCESS_KEY_ID}
+            aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+            [eb-cli]
+            aws_access_key_id = ${AWS_ACCESS_KEY_ID}
+            aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+            EOF
+            cat > ~/.aws/config << EOF
+            [default]
+            region = ${AWS_DEFAULT_REGION}
+            [profile eb-cli]
+            region = ${AWS_DEFAULT_REGION}
+            EOF
+      - run:
           name: Initialize EB CLI (if needed)
           command: |
             export PATH=$HOME/.local/bin:$PATH
@@ -80,7 +100,7 @@ jobs:
           name: Deploy to AWS Elastic Beanstalk
           command: |
             export PATH=$HOME/.local/bin:$PATH
-            # EB CLI automatically uses AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from environment variables
+            # EB CLI will use the eb-cli profile configured above
             eb deploy Frontend-env
 
 # Orchestrate jobs using workflows
