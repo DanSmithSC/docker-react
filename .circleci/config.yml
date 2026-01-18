@@ -2,6 +2,13 @@
 # See: https://circleci.com/docs/reference/configuration-reference
 version: 2.1
 
+# Define executors for reuse across jobs
+# See: https://circleci.com/docs/reference/configuration-reference/#executors
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:20.10
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/guides/orchestrate/jobs-steps/#jobs-overview & https://circleci.com/docs/reference/configuration-reference/#jobs
 jobs:
@@ -29,10 +36,47 @@ jobs:
           name: Run tests
           command: docker run -e CI=true denzik10/docker-react npm run test -- --coverage
 
+  build-and-deploy:
+    # Use the node executor defined above (matches article pattern)
+    executor: node-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install --include=dev
+      - run:
+          name: Build the project
+          command: npm run build
+      - run:
+          name: Install Python and pip
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
+      - run:
+          name: Install AWS EB CLI
+          command: |
+            pip3 install --upgrade pip
+            pip3 install awsebcli --upgrade --user
+            export PATH=$HOME/.local/bin:$PATH
+      - run:
+          name: Deploy to AWS Elastic Beanstalk
+          command: |
+            export PATH=$HOME/.local/bin:$PATH
+            # EB CLI automatically uses AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from environment variables
+            eb deploy Frontend-env
+
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/guides/orchestrate/workflows/ & https://circleci.com/docs/reference/configuration-reference/#workflows
 workflows:
-  build-and-test-workflow:
-    # Inside the workflow, you define the jobs you want to run.
+  build_and_deploy:
     jobs:
+      # Run build and test on all branches
       - build-and-test
+      # Deploy to Elastic Beanstalk only on main branch, after tests pass
+      - build-and-deploy:
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              only:
+                - main
